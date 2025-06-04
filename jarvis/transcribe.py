@@ -31,7 +31,7 @@ def record_and_transcribe():
     RATE = 16000
     CHUNK = 1024
     WAVE_OUTPUT_FILENAME = "temp.wav"
-    SILENCE_THRESHOLD = 700  # RMS threshold for silence
+    SILENCE_THRESHOLD = 900  # RMS threshold for silence
     MIN_SILENCE_DURATION_SEC = 1.5  # Seconds of silence to stop recording
     MAX_RECORDING_DURATION_SEC = 7.0  # Max seconds to record
 
