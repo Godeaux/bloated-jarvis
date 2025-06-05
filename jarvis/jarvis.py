@@ -5,6 +5,7 @@ import os
 from dotenv import load_dotenv
 import requests
 import pyttsx3
+from datetime import datetime
 
 ########### Configs ###########
 monitor_number = 2 # 1 is Windows monitor 1, etc.
@@ -25,60 +26,75 @@ voice_channel_id = os.getenv("VOICE_CHANNEL_ID")
 # Initialize text-to-speech engine
 tts_engine = pyttsx3.init()
 
+# Simple color-coded logger for nicer console output
+COLORS = {
+    "reset": "\033[0m",
+    "blue": "\033[94m",
+    "green": "\033[92m",
+    "yellow": "\033[93m",
+    "magenta": "\033[95m",
+}
+
+def log(message: str, color: str = "blue"):
+    color_code = COLORS.get(color, "")
+    reset = COLORS["reset"]
+    timestamp = datetime.now().strftime("%H:%M:%S")
+    print(f"{color_code}[{timestamp}] {message}{reset}")
+
 def speak(text: str):
     tts_engine.say(text)
     tts_engine.runAndWait()
 
 def listen_for_voice_commands():
     while True:
-        print("Say \"Jarvis\" to wake...")
+        log("Say \"Jarvis\" to wake...", "yellow")
         wait_for_wake_word()
-        print("Wake word detected.")
+        log("Wake word detected.", "green")
         transcript = record_and_transcribe()
-        print(f"You said: {transcript}")
+        log(f"You said: {transcript}", "magenta")
 
         if ("now" in transcript and "playing" in transcript):
-            print("Now playing command detected.")
+            log("Now playing command detected.")
             speak("Now playing.")
             send_command("now-playing")
         elif "played" in transcript:
-            print("Play command detected.")
+            log("Play command detected.")
             song_name = transcript.replace("played", "", 1).strip()
             if song_name:
                 speak(f"Playing {song_name}")
                 send_play_command(song_name)
         elif "play" in transcript:
-            print("Play command detected.")
+            log("Play command detected.")
             song_name = transcript.replace("play", "", 1).strip()
             if song_name:
                 speak(f"Playing {song_name}")
                 send_play_command(song_name)
         elif "stop" in transcript:
-            print("Stop playback command detected.")
+            log("Stop playback command detected.")
             speak("Stopping playback.")
             send_command("stop")
         elif "pause" in transcript:
-            print("Pause playback command detected.")
+            log("Pause playback command detected.")
             speak("Pausing playback.")
             send_command("pause")
         elif "resume" in transcript:
-            print("Resume playback command detected.")
+            log("Resume playback command detected.")
             speak("Resuming playback.")
             send_command("resume")
         elif "next" in transcript:
-            print("Skip track command detected.")
+            log("Skip track command detected.")
             speak("Skipping track.")
             send_command("next")
         elif "clear" in transcript:
-            print("Clear queue command detected.")
+            log("Clear queue command detected.")
             speak("Clearing queue.")
             send_command("clear")
         elif ("kill" in transcript and "self" in transcript) or ("self" in transcript and "destruct" in transcript):
-            print("Kill command detected.")
+            log("Kill command detected.")
             speak("Goodbye.")
             quit()
         else:
-            print("No known command found.")
+            log("No known command found.")
             speak("Sorry, I didn't understand that command.")
 
 def send_play_command(song_name: str):
@@ -90,10 +106,11 @@ def send_play_command(song_name: str):
         "options": {"query": song_name}
     }
     response = requests.post(url, json=payload)
+    log(f"Packet sent to {url}: {payload}", "green")
     try:
         return response.json()
     except Exception:
-        print("Non-JSON response:", response.status_code, response.text)
+        log(f"Non-JSON response: {response.status_code} {response.text}", "red")
         return None
 
 def send_command(command: str):
@@ -105,20 +122,21 @@ def send_command(command: str):
         "options": {}
     }
     response = requests.post(url, json=payload)
+    log(f"Packet sent to {url}: {payload}", "green")
     try:
         return response.json()
     except Exception:
-        print("Non-JSON response:", response.status_code, response.text)
+        log(f"Non-JSON response: {response.status_code} {response.text}", "red")
         return None
 
 def main():
-    print("Starting Jarvis...")
+    log("Starting Jarvis...", "yellow")
 
     # for some reason you need to click the window first
     # to ensure Discord window can be activated on first run???
     # not even a manual click works...
 
-    print("Starting voice command listener...")
+    log("Starting voice command listener...", "yellow")
     listen_for_voice_commands()
 
 if __name__ == "__main__":
